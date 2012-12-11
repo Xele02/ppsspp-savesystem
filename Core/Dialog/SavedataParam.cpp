@@ -285,6 +285,9 @@ void SavedataParam::SetPspParam(SceUtilitySavedataParam* param)
 		if(saveDataList)
 			delete[] saveDataList;
 		saveDataList = new SaveFileInfo[count];
+#ifdef DUMP_SAVE
+		realNameListDataCount = count;
+#endif
 
 		// get and stock file info for each file
 		int realCount = 0;

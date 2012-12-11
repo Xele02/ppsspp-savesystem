@@ -19,6 +19,8 @@
 #include "../Util/PPGeDraw.h"
 #include "../HLE/sceCtrl.h"
 #include "../Core/MemMap.h"
+#include "../System.h"
+
 
 PSPSaveDialog::PSPSaveDialog()
 	: PSPDialog()
@@ -37,6 +39,100 @@ void PSPSaveDialog::Init(int paramAddr)
 
 	DEBUG_LOG(HLE,"sceUtilitySavedataInitStart(%08x)", paramAddr);
 	DEBUG_LOG(HLE,"Mode: %i", param.GetPspParam()->mode);
+
+#ifdef DUMP_SAVE
+
+	static int counter = 0;
+	std::string path = "ms0:/DEBUG_SAVE/";
+	if(counter == 0) // Reset datas
+	{
+		pspFileSystem.RmDir(path);
+		pspFileSystem.MkDir(path);
+	}
+
+	char fileName[1024];
+	sprintf(fileName,"%s%d_%s_%d_in.bin",path.c_str(),counter,param.GetGameName(param.GetPspParam()).c_str(),param.GetPspParam()->mode);
+	int handle = pspFileSystem.OpenFile(fileName,(FileAccess)(FILEACCESS_CREATE | FILEACCESS_WRITE));
+	if(handle)
+	{
+		pspFileSystem.WriteFile(handle,(u8*)param.GetPspParam(),param.GetPspParam()->size);
+		pspFileSystem.CloseFile(handle);
+	}
+
+	if(param.GetPspParam()->saveNameList != 0)
+	{
+		sprintf(fileName,"%s%d_%s_nameList_in.bin",path.c_str(),counter,param.GetGameName(param.GetPspParam()).c_str());
+		handle = pspFileSystem.OpenFile(fileName,(FileAccess)(FILEACCESS_CREATE | FILEACCESS_WRITE));
+		if(handle)
+		{
+			u8* data = (u8*)Memory::GetPointer(param.GetPspParam()->saveNameList);
+			pspFileSystem.WriteFile(handle,(u8*)data,20*param.realNameListDataCount);
+			pspFileSystem.CloseFile(handle);
+		}
+	}
+
+	if(param.GetPspParam()->dataBuf != 0)
+	{
+		sprintf(fileName,"%s%d_%s_dataBuf_in.bin",path.c_str(),counter,param.GetGameName(param.GetPspParam()).c_str());
+		handle = pspFileSystem.OpenFile(fileName,(FileAccess)(FILEACCESS_CREATE | FILEACCESS_WRITE));
+		if(handle)
+		{
+			u8* data = (u8*)Memory::GetPointer(param.GetPspParam()->dataBuf);
+			pspFileSystem.WriteFile(handle,(u8*)data,param.GetPspParam()->dataBufSize);
+			pspFileSystem.CloseFile(handle);
+		}
+	}
+
+	if(param.GetPspParam()->icon0FileData.buf != 0)
+	{
+		sprintf(fileName,"%s%d_%s_icon0_in.bin",path.c_str(),counter,param.GetGameName(param.GetPspParam()).c_str());
+		handle = pspFileSystem.OpenFile(fileName,(FileAccess)(FILEACCESS_CREATE | FILEACCESS_WRITE));
+		if(handle)
+		{
+			u8* data = (u8*)Memory::GetPointer(param.GetPspParam()->icon0FileData.buf);
+			pspFileSystem.WriteFile(handle,(u8*)data,param.GetPspParam()->icon0FileData.bufSize);
+			pspFileSystem.CloseFile(handle);
+		}
+	}
+
+	if(param.GetPspParam()->icon1FileData.buf != 0)
+	{
+		sprintf(fileName,"%s%d_%s_icon1_in.bin",path.c_str(),counter,param.GetGameName(param.GetPspParam()).c_str());
+		handle = pspFileSystem.OpenFile(fileName,(FileAccess)(FILEACCESS_CREATE | FILEACCESS_WRITE));
+		if(handle)
+		{
+			u8* data = (u8*)Memory::GetPointer(param.GetPspParam()->icon1FileData.buf);
+			pspFileSystem.WriteFile(handle,(u8*)data,param.GetPspParam()->icon1FileData.bufSize);
+			pspFileSystem.CloseFile(handle);
+		}
+	}
+
+	if(param.GetPspParam()->snd0FileData.buf != 0)
+	{
+		sprintf(fileName,"%s%d_%s_snd0_in.bin",path.c_str(),counter,param.GetGameName(param.GetPspParam()).c_str());
+		handle = pspFileSystem.OpenFile(fileName,(FileAccess)(FILEACCESS_CREATE | FILEACCESS_WRITE));
+		if(handle)
+		{
+			u8* data = (u8*)Memory::GetPointer(param.GetPspParam()->snd0FileData.buf);
+			pspFileSystem.WriteFile(handle,(u8*)data,param.GetPspParam()->snd0FileData.bufSize);
+			pspFileSystem.CloseFile(handle);
+		}
+	}
+
+	if(param.GetPspParam()->pic1FileData.buf != 0)
+	{
+		sprintf(fileName,"%s%d_%s_pic1_in.bin",path.c_str(),counter,param.GetGameName(param.GetPspParam()).c_str());
+		handle = pspFileSystem.OpenFile(fileName,(FileAccess)(FILEACCESS_CREATE | FILEACCESS_WRITE));
+		if(handle)
+		{
+			u8* data = (u8*)Memory::GetPointer(param.GetPspParam()->pic1FileData.buf);
+			pspFileSystem.WriteFile(handle,(u8*)data,param.GetPspParam()->pic1FileData.bufSize);
+			pspFileSystem.CloseFile(handle);
+		}
+	}
+	counter++;
+
+#endif
 
 	switch(param.GetPspParam()->mode)
 	{
@@ -626,6 +722,37 @@ void PSPSaveDialog::Update()
 void PSPSaveDialog::Shutdown()
 {
 	PSPDialog::Shutdown();
+#ifdef DUMP_SAVE
+
+	static int counter = 0;
+	std::string path = "ms0:/DEBUG_SAVE/";
+
+	char fileName[1024];
+	sprintf(fileName,"%s%d_%s_%d_out.bin",path.c_str(),counter,param.GetGameName(param.GetPspParam()).c_str(),param.GetPspParam()->mode);
+	int handle = pspFileSystem.OpenFile(fileName,(FileAccess)(FILEACCESS_CREATE | FILEACCESS_WRITE));
+	if(handle)
+	{
+		pspFileSystem.WriteFile(handle,(u8*)param.GetPspParam(),param.GetPspParam()->size);
+		pspFileSystem.CloseFile(handle);
+	}
+/*
+ 	 // Wait to know real size to write
+	if(param.GetPspParam()->msFree != 0)
+	{
+		sprintf(fileName,"%s%d_%s_msFree_out.bin",path.c_str(),counter,param.GetGameName(param.GetPspParam()).c_str());
+		handle = pspFileSystem.OpenFile(fileName,(FileAccess)(FILEACCESS_CREATE | FILEACCESS_WRITE));
+		if(handle)
+		{
+			u8* data = (u8*)Memory::GetPointer(param.GetPspParam()->msFree);
+			pspFileSystem.WriteFile(handle,(u8*)data,1024);
+			pspFileSystem.CloseFile(handle);
+		}
+	}
+*/
+
+	counter++;
+
+#endif
 	param.SetPspParam(0);
 }
 

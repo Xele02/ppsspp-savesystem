@@ -19,6 +19,7 @@
 
 #include "../HLE/sceKernel.h"
 
+#define DUMP_SAVE
 
 enum SceUtilitySavedataType
 {
@@ -152,6 +153,9 @@ public:
 	int GetSelectedSave();
 	void SetSelectedSave(int idx);
 
+#ifdef DUMP_SAVE
+	int realNameListDataCount;
+#endif
 private:
 	SceUtilitySavedataParam* pspParam;
 	int selectedSave;
