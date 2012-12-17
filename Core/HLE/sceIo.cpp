@@ -249,7 +249,7 @@ u32 sceIoGetstat(const char *filename, u32 addr) {
 }
 
 //Not sure about wrapping it or not, since the log seems to take the address of the data var
-u32 sceIoRead(int id, u32 data_addr, int size) {
+u32 sceIoRead(int id, void* data_addr, int size) {
 	if (id == 3) {
 		DEBUG_LOG(HLE, "sceIoRead STDIN");
 		return 0; //stdin
@@ -259,11 +259,11 @@ u32 sceIoRead(int id, u32 data_addr, int size) {
 	FileNode *f = kernelObjects.Get < FileNode > (id, error);
 	if (f) {
 		if (data_addr) {
-			u8 *data = (u8*) Memory::GetPointer(data_addr);
-			f->asyncResult = (u32) pspFileSystem.ReadFile(f->handle, data,
+			//u8 *data = (u8*) Memory::GetPointer(data_addr);
+			f->asyncResult = (u32) pspFileSystem.ReadFile(f->handle, (u8*)data_addr,
 					size);
 			DEBUG_LOG(HLE, "%i=sceIoRead(%d, %08x , %i)", f->asyncResult, id,
-					data_addr, size);
+					*(int*)&data_addr, size);
 			return f->asyncResult;
 		} else {
 			ERROR_LOG(HLE, "sceIoRead Reading into zero pointer");
@@ -287,7 +287,7 @@ u32 sceIoWrite(int id, void *data_ptr, int size) //(int fd, void *data, int size
 		char *str = (char *) data_ptr;
 		char temp = str[size];
 		str[size] = 0;
-		DEBUG_LOG(HLE, "stdout: %s", str);
+		INFO_LOG(HLE, "stdout: %s", str);
 		str[size] = temp;
 		return size;
 	}
@@ -716,7 +716,7 @@ void sceIoOpenAsync(const char *filename, int mode)
 	// Now that we're just faking it, we just don't RETURN(0) here.
 }
 
-u32 sceIoReadAsync(int id, u32 data_addr, int size)
+u32 sceIoReadAsync(int id, void* data_addr, int size)
 {
 	DEBUG_LOG(HLE, "sceIoReadAsync(%d)", id);
 	sceIoRead(id, data_addr, size);
@@ -893,8 +893,8 @@ const HLEFunction IoFileMgrForUser[] = {
 	{ 0x89AA9906, &WrapV_CI<sceIoOpenAsync>, "sceIoOpenAsync" },
 	{ 0x06A70004, &WrapU_CI<sceIoMkdir>, "sceIoMkdir" }, //(const char *dir, int mode);
 	{ 0x3251ea56, &WrapU_IU<sceIoPollAsync>, "sceIoPollAsync" },
-	{ 0x6A638D83, &WrapU_IUI<sceIoRead>, "sceIoRead" }, //(int fd, void *data, int size);
-	{ 0xa0b5a7c2, &WrapU_IUI<sceIoReadAsync>, "sceIoReadAsync" },
+	{ 0x6A638D83, &WrapU_IVI<sceIoRead>, "sceIoRead" }, //(int fd, void *data, int size);
+	{ 0xa0b5a7c2, &WrapU_IVI<sceIoReadAsync>, "sceIoReadAsync" },
 	{ 0xF27A9C51, &WrapU_C<sceIoRemove>, "sceIoRemove" }, //(const char *file);
 	{ 0x779103A0, &WrapU_CC<sceIoRename>, "sceIoRename" }, //(const char *oldname, const char *newname);
 	{ 0x1117C65F, &WrapU_C<sceIoRmdir>, "sceIoRmdir" }, //(const char *dir);

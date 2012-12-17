@@ -131,7 +131,24 @@ u32 DirectoryFileSystem::OpenFile(std::string filename, FileAccess access)
 	entry.hFile = CreateFile(fullName.c_str(), desired, sharemode, 0, openmode, 0, 0);
 	bool success = entry.hFile != INVALID_HANDLE_VALUE;
 #else
-  entry.hFile = fopen(fullName.c_str(), access & FILEACCESS_WRITE ? "wb" : "rb");
+	const char* accessMode = "";
+	if(access & FILEACCESS_WRITE)
+	{
+		if(access & FILEACCESS_APPEND)
+		{
+			accessMode = "ab";
+		}
+		else
+		{
+			accessMode = "wb";
+		}
+	}
+	else
+	{
+		accessMode = "rb";
+	}
+
+  entry.hFile = fopen(fullName.c_str(), accessMode);
   bool success = entry.hFile != 0;
 #endif
 
